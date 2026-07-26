@@ -115,9 +115,15 @@ app.all('*', (req, res) => {
                 contentType.indexOf('text/css') !== -1) {
 
                 return response.text().then((text) => {
-                    if (req.url.indexOf('/tv') === 0) {
-                        // Insert the userscript for TizenTube
-                        text += `<script src="https://cdn.jsdelivr.net/npm/@foxreis/tizentube/dist/userScript.js?ver=${Date.now()}"></script>`;
+                    if (contentType.indexOf('text/html') !== -1 && req.path === '/tv') {
+                        // This must run before YouTube parses its initial player data: the
+                        // ad blocker patches JSON.parse to remove ad placements.
+                        const userScript = `<script src="https://cdn.jsdelivr.net/npm/@foxreis/tizentube/dist/userScript.js?ver=${Date.now()}"></script>`;
+                        if (/<\/head\s*>/i.test(text)) {
+                            text = text.replace(/<\/head\s*>/i, `${userScript}</head>`);
+                        } else {
+                            text = userScript + text;
+                        }
                     }
 
                     const proxyPrefix = `http://localhost:${PORT}/cors-bypass/`;
