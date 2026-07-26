@@ -6,8 +6,9 @@ const express = require('express');
 const app = express();
 const PORT = 8099;
 const fetch = require('node-fetch');
-const http = require('http');
 const URL = require('url');
+const TIZENTUBE_CDN_URL = 'https://cdn.jsdelivr.net/npm/@foxreis/tizentube/dist/userScript.js';
+const TIZENTUBE_CDN_FALLBACK_URL = 'https://unpkg.com/@foxreis/tizentube/dist/userScript.js';
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -118,7 +119,9 @@ app.all('*', (req, res) => {
                     if (contentType.indexOf('text/html') !== -1 && req.path === '/tv') {
                         // This must run before YouTube parses its initial player data: the
                         // ad blocker patches JSON.parse to remove ad placements.
-                        const userScript = `<script src="https://cdn.jsdelivr.net/npm/@foxreis/tizentube/dist/userScript.js?ver=${Date.now()}"></script>`;
+                        // Keep the primary URL cacheable for TV browsers. If that CDN is
+                        // unavailable, retry from a second CDN before YouTube's scripts run.
+                        const userScript = `<script src="${TIZENTUBE_CDN_URL}" onerror="this.onerror=null;this.src='${TIZENTUBE_CDN_FALLBACK_URL}'"></script>`;
                         if (/<body[^>]*>/i.test(text)) {
                             text = text.replace(/<body[^>]*>/i, (bodyTag) => `${bodyTag}${userScript}`);
                         } else {
