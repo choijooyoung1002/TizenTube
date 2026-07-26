@@ -119,8 +119,8 @@ app.all('*', (req, res) => {
                         // This must run before YouTube parses its initial player data: the
                         // ad blocker patches JSON.parse to remove ad placements.
                         const userScript = `<script src="https://cdn.jsdelivr.net/npm/@foxreis/tizentube/dist/userScript.js?ver=${Date.now()}"></script>`;
-                        if (/<\/head\s*>/i.test(text)) {
-                            text = text.replace(/<\/head\s*>/i, `${userScript}</head>`);
+                        if (/<body[^>]*>/i.test(text)) {
+                            text = text.replace(/<body[^>]*>/i, (bodyTag) => `${bodyTag}${userScript}`);
                         } else {
                             text = userScript + text;
                         }
